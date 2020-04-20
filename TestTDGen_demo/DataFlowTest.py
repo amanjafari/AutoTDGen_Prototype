@@ -59,6 +59,7 @@ all_dup_list = {
                  }
 """
 
+# set random test cases in range 1 ~ ...
 geneset = [i for i in range(1, 9040)]
 
 
