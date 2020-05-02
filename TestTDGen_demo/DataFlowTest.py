@@ -27,7 +27,12 @@ from TestTDGen_demo import genetic
 #     "commission":[["20", "31 <= commission && commission < 15","T"]]
 #                 }
 
-
+"""
+    Because the variable sales is in a form of funciton decomposition. 
+    It's implementation is not integrated here, but here its concisdered as a single valued variable.
+     due to bigger sized integer value on the guard condition this may requires a lager population size.
+      (e.g. 2000). A demonstrative example is provided superately in "varFunctionDecomposition". 
+"""
 all_dup_list = {
     "locks":[["1", "locks>=1","Y"],
                      ["1","locks>=1","3","4","5","N"],
@@ -47,6 +52,7 @@ all_dup_list = {
                 }
 
 
+# When the generated test paths are not represented as numarical values.
 """ 
  all_dup_list = {
                   "engine":[["Car Simulation", "Start the car engine","Y"],
@@ -61,8 +67,9 @@ all_dup_list = {
                  }
 """
 
-# set random test cases in range 1 ~ ...
-geneset = [i for i in range(1, 9040)]
+# set random test data in range 1 ~ ...
+# thsi can be experemented with different values
+geneset = [i for i in range(1, 2000)]
 
 
 def get_fitness(genes, dups):

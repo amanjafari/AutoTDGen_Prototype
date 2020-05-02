@@ -45,7 +45,8 @@ def mutate(genes, sortedGeneset, window, geneIndexes):
 
 class DUPathsTests(unittest.TestCase):
     global geneset
-    geneset = [i for i in range(1, 990)]
+    # initialize populatin size
+    geneset = [i for i in range(1, 80)]
 
     def test_3_inputs_T1(self):
 
