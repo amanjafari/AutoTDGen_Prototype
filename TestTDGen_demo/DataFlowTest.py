@@ -7,6 +7,8 @@ Aotumated test input generation using activity diagram and genetic algorithm
 import datetime
 import random
 import unittest
+from itertools import chain
+
 from TestTDGen_demo import genetic
 
 
@@ -94,6 +96,63 @@ def mutate(genes, sortedGeneset, window, geneIndexes):
         stop = min(len(sortedGeneset) - 1, genesetIndex + window.Size)
         genesetIndex = random.randint(start, stop)
         genes[index] = sortedGeneset[genesetIndex]
+
+"""
+def mutate(genes, fnGetFitness):
+    count = random.randint(2, len(genes))
+    initialFitness = fnGetFitness(genes)
+    while count > 0:
+        count -= 1
+        indexA, indexB = random.sample(range(len(genes)), 2)
+        genes[indexA], genes[indexB] = genes[indexB], genes[indexA]
+        fitness = fnGetFitness(genes)
+        if fitness > initialFitness:
+            return
+"""
+
+def crossover(parentGenes, donorGenes, fnGetFitness):
+    pairs = {Pair(donorGenes[0], donorGenes[-1]): 0}
+
+    for i in range(len(donorGenes) - 1):
+        pairs[Pair(donorGenes[i], donorGenes[i + 1])] = 0
+
+    tempGenes = parentGenes[:]
+    if Pair(parentGenes[0], parentGenes[-1]) in pairs:
+        # find a discontinuity
+        found = False
+        for i in range(len(parentGenes) - 1):
+            if Pair(parentGenes[i], parentGenes[i + 1]) in pairs:
+                continue
+            tempGenes = parentGenes[i + 1:] + parentGenes[:i + 1]
+            found = True
+            break
+        if not found:
+            return None
+
+    runs = [[tempGenes[0]]]
+    for i in range(len(tempGenes) - 1):
+        if Pair(tempGenes[i], tempGenes[i + 1]) in pairs:
+            runs[-1].append(tempGenes[i + 1])
+            continue
+        runs.append([tempGenes[i + 1]])
+
+    initialFitness = fnGetFitness(parentGenes)
+    count = random.randint(2, 20)
+    runIndexes = range(len(runs))
+    while count > 0:
+        count -= 1
+        for i in runIndexes:
+            if len(runs[i]) == 1:
+                continue
+            if random.randint(0, len(runs)) == 0:
+                runs[i] = [n for n in reversed(runs[i])]
+
+        indexA, indexB = random.sample(runIndexes, 2)
+        runs[indexA], runs[indexB] = runs[indexB], runs[indexA]
+        childGenes = list(chain.from_iterable(runs))
+        if fnGetFitness(childGenes) > initialFitness:
+            return childGenes
+    return childGenes
 
 
 
@@ -274,6 +333,9 @@ class DUPathsTests(unittest.TestCase):
         geneIndexes = [i for i in range(induiduals)]
         sortedGeneset = sorted(geneset)
 
+        def fnCreate():
+            return random.sample(geneset, len(geneset))
+
         def fnDisplay(candidate):
             display(candidate, startTime, fnGenesToInputs, var)
 
@@ -282,10 +344,12 @@ class DUPathsTests(unittest.TestCase):
 
         def fnMutate(genes):
             mutate(genes, sortedGeneset, window, geneIndexes)
+        def fnCrossover(parent, donor):
+            return crossover(parent, donor, fnGetFitness)
 
         optimalFitness = Fitness(0.99)
         best = genetic.get_best(fnGetFitness, induiduals, optimalFitness,
-                                geneset, fnDisplay, fnMutate, maxAge=maxAge)
+                                geneset, fnDisplay, fnMutate, maxAge=maxAge, poolSize=6, crossover=None)
         print("Best", best.Fitness)
         self.assertTrue(not optimalFitness > best.Fitness)
         return best.Fitness
@@ -301,6 +365,19 @@ class Fitness:
     def __str__(self):
         return "Fitness , {:0.2f}".format(float(self.TotalFitness))
 
+
+class Pair:
+    def __init__(self, dup, adjacent):
+        if dup < adjacent:
+            dup, adjacent = adjacent, dup
+        self.Dup = dup
+        self.Adjacent = adjacent
+
+    def __eq__(self, other):
+        return self.Dup == other.Dup and self.Adjacent == other.Adjacent
+
+    def __hash__(self):
+        return hash(self.Dup) * 397 ^ hash(self.Adjacent)
 
 class Window:
     def __init__(self, minimum, maximum, size):
