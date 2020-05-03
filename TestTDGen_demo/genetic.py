@@ -14,7 +14,7 @@ import statistics
 import sys
 import time
 from bisect import bisect_left
-from enum import Enum
+from enum import Enum, IntEnum
 from math import exp
 
 
@@ -148,6 +148,49 @@ def _get_improvement(new_child, generate_parent, maxAge, poolSize):
             yield bestParent
             historicalFitnesses.append(bestParent.Fitness)
 
+
+def tournament(generate_parent, crossover, compete, display, sort_key,
+               numParents=10, max_generations=100):
+    pool = [[generate_parent(), [0, 0, 0]] for _ in
+            range(1 + numParents * numParents)]
+    best, bestScore = pool[0]
+
+    def getSortKey(x):
+        return sort_key(x[0], x[1][CoverageResult.Cov],
+                        x[1][CoverageResult.Miss])
+
+    generation = 0
+    while generation < max_generations:
+        generation += 1
+        for i in range(0, len(pool)):
+            for j in range(0, len(pool)):
+                if i == j:
+                    continue
+                playera, scorea = pool[i]
+                playerb, scoreb = pool[j]
+                result = compete(playera, playerb)
+                scorea[result] += 1
+                scoreb[2 - result] += 1
+
+        pool.sort(key=getSortKey, reverse=True)
+        if getSortKey(pool[0]) > getSortKey([best, bestScore]):
+            best, bestScore = pool[0]
+            display(best, bestScore[CoverageResult.Cov],
+                    bestScore[CoverageResult.Miss],
+                            generation)
+
+        parents = [pool[i][0] for i in range(numParents)]
+        pool = [[crossover(parents[i], parents[j]), [0, 0, 0]]
+                for i in range(len(parents))
+                for j in range(len(parents))
+                if i != j]
+        pool.extend([parent, [0, 0, 0]] for parent in parents)
+        pool.append([generate_parent(), [0, 0, 0]])
+    return best
+
+class CoverageResult(IntEnum):
+    Cov = 0,
+    Miss = 1
 
 class Chromosome:
     def __init__(self, genes, fitness, strategy):

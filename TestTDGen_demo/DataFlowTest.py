@@ -84,7 +84,7 @@ def display(candidate, startTime, fnGenesToInputs,v):
     result = str(v) +" , " +  str(fnGenesToInputs(candidate.Genes))
     print("{}\t{}\t{}".format(result, candidate.Fitness, timeDiff))
 
-
+"""
 def mutate(genes, sortedGeneset, window, geneIndexes):
     indexes = random.sample(geneIndexes, random.randint(1, len(genes))) \
         if random.randint(0, 10) == 0 else [random.choice(geneIndexes)]
@@ -96,8 +96,8 @@ def mutate(genes, sortedGeneset, window, geneIndexes):
         stop = min(len(sortedGeneset) - 1, genesetIndex + window.Size)
         genesetIndex = random.randint(start, stop)
         genes[index] = sortedGeneset[genesetIndex]
-
 """
+
 def mutate(genes, fnGetFitness):
     count = random.randint(2, len(genes))
     initialFitness = fnGetFitness(genes)
@@ -108,7 +108,7 @@ def mutate(genes, fnGetFitness):
         fitness = fnGetFitness(genes)
         if fitness > initialFitness:
             return
-"""
+
 
 def crossover(parentGenes, donorGenes, fnGetFitness):
     pairs = {Pair(donorGenes[0], donorGenes[-1]): 0}
@@ -343,13 +343,14 @@ class DUPathsTests(unittest.TestCase):
             return get_fitness(genes, dups)
 
         def fnMutate(genes):
-            mutate(genes, sortedGeneset, window, geneIndexes)
+            # mutate(genes, sortedGeneset, window, geneIndexes)
+            mutate(genes, fnGetFitness)
         def fnCrossover(parent, donor):
             return crossover(parent, donor, fnGetFitness)
 
         optimalFitness = Fitness(0.99)
         best = genetic.get_best(fnGetFitness, induiduals, optimalFitness,
-                                geneset, fnDisplay, fnMutate, maxAge=maxAge, poolSize=6, crossover=None)
+                                geneset, fnDisplay, fnMutate, custom_create=fnCreate, maxAge=maxAge, poolSize=6, crossover=fnCrossover)
         print("Best", best.Fitness)
         self.assertTrue(not optimalFitness > best.Fitness)
         return best.Fitness
