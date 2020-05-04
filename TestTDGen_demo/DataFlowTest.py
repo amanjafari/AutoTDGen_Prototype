@@ -71,7 +71,7 @@ all_dup_list = {
 
 # set random test data in range 1 ~ ...
 # thsi can be experemented with different values
-geneset = [i for i in range(1, 2000)]
+geneset = [i for i in range(1, 3000)]
 
 
 def get_fitness(genes, dups):
@@ -326,12 +326,12 @@ class DUPathsTests(unittest.TestCase):
 
     def solve_indiuidual(self, induiduals, geneset, dups, fnGenesToInputs,var):
         startTime = datetime.datetime.now()
-        maxAge = 50
-        window = Window(max(1, int(len(geneset) / (2 * maxAge))),
-                        max(1, int(len(geneset) / 3)),
-                        int(len(geneset) / 2))
-        geneIndexes = [i for i in range(induiduals)]
-        sortedGeneset = sorted(geneset)
+        maxAge = 500
+        # window = Window(max(1, int(len(geneset) / (2 * maxAge))),
+        #                 max(1, int(len(geneset) / 3)),
+        #                 int(len(geneset) / 2))
+        # geneIndexes = [i for i in range(induiduals)]
+        # sortedGeneset = sorted(geneset)
 
         def fnCreate():
             return random.sample(geneset, len(geneset))
@@ -350,7 +350,7 @@ class DUPathsTests(unittest.TestCase):
 
         optimalFitness = Fitness(0.99)
         best = genetic.get_best(fnGetFitness, induiduals, optimalFitness,
-                                geneset, fnDisplay, fnMutate, custom_create=fnCreate, maxAge=maxAge, poolSize=6, crossover=fnCrossover)
+                                geneset, fnDisplay, fnMutate, custom_create=fnCreate, maxAge=maxAge, poolSize=20, crossover=fnCrossover)
         print("Best", best.Fitness)
         self.assertTrue(not optimalFitness > best.Fitness)
         return best.Fitness
@@ -380,14 +380,14 @@ class Pair:
     def __hash__(self):
         return hash(self.Dup) * 397 ^ hash(self.Adjacent)
 
-class Window:
-    def __init__(self, minimum, maximum, size):
-        self.Min = minimum
-        self.Max = maximum
-        self.Size = size
-
-    def slide(self):
-        self.Size = self.Size - 1 if self.Size > self.Min else self.Max
+# class Window:
+#     def __init__(self, minimum, maximum, size):
+#         self.Min = minimum
+#         self.Max = maximum
+#         self.Size = size
+#
+#     def slide(self):
+#         self.Size = self.Size - 1 if self.Size > self.Min else self.Max
 
 
 if __name__ == '__main__':

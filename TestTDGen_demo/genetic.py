@@ -149,11 +149,11 @@ def _get_improvement(new_child, generate_parent, maxAge, poolSize):
             historicalFitnesses.append(bestParent.Fitness)
 
 
-def tournament(generate_parent, crossover, compete, display, sort_key,
-               numParents=10, max_generations=100):
+def tournament(generate_parent, crossover, execute, display, sort_key,
+               numParents=6, max_generations=20):
     pool = [[generate_parent(), [0, 0, 0]] for _ in
             range(1 + numParents * numParents)]
-    best, bestScore = pool[0]
+    best, bestCoverage = pool[0]
 
     def getSortKey(x):
         return sort_key(x[0], x[1][CoverageResult.Cov],
@@ -166,17 +166,17 @@ def tournament(generate_parent, crossover, compete, display, sort_key,
             for j in range(0, len(pool)):
                 if i == j:
                     continue
-                playera, scorea = pool[i]
-                playerb, scoreb = pool[j]
-                result = compete(playera, playerb)
-                scorea[result] += 1
-                scoreb[2 - result] += 1
+                patha, coveragea = pool[i]
+                pathb, coverageb = pool[j]
+                result = execute(patha, pathb)
+                coveragea[result] += 1
+                coverageb[2 - result] += 1
 
         pool.sort(key=getSortKey, reverse=True)
-        if getSortKey(pool[0]) > getSortKey([best, bestScore]):
-            best, bestScore = pool[0]
-            display(best, bestScore[CoverageResult.Cov],
-                    bestScore[CoverageResult.Miss],
+        if getSortKey(pool[0]) > getSortKey([best, bestCoverage]):
+            best, bestCoverage = pool[0]
+            display(best, bestCoverage[CoverageResult.Cov],
+                    bestCoverage[CoverageResult.Miss],
                             generation)
 
         parents = [pool[i][0] for i in range(numParents)]
